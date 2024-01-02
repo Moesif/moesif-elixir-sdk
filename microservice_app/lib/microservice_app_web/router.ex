@@ -3,6 +3,7 @@ defmodule MicroserviceAppWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug MicroserviceAppWeb.Plugs.RequestLogger
   end
 
   scope "/api", MicroserviceAppWeb do
