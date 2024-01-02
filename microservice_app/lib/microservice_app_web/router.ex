@@ -7,6 +7,8 @@ defmodule MicroserviceAppWeb.Router do
 
   scope "/api", MicroserviceAppWeb do
     pipe_through :api
+
+    get "/example", ExampleController, :index
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
