@@ -12,7 +12,7 @@ config :microservice_app,
 
 # Configures the endpoint
 config :microservice_app, MicroserviceAppWeb.Endpoint,
-  url: [host: "0.0.0.0", port: 4000],
+  url: [host: "localhost"],
   adapter: Phoenix.Endpoint.Cowboy2Adapter,
   render_errors: [
     formats: [json: MicroserviceAppWeb.ErrorJSON],
