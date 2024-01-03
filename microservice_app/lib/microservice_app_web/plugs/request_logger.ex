@@ -37,7 +37,17 @@ defmodule MicroserviceAppWeb.Plugs.RequestLogger do
       direction: "Incoming",
     }
 
-    Logger.info("Response Data: #{Jason.encode!(response_data)}")
+    response = post_to_remote("http://localhost:8080/echo", response_data)
+    Logger.info("Response: #{inspect(response)}")
+
     conn
+  end
+
+  defp post_to_remote(url, data) do
+    body = Jason.encode!(data)
+    Logger.info("Response Data: #{body}")
+    headers = [{"Content-Type", "application/json"}]
+
+    HTTPoison.post(url, body, headers)
   end
 end

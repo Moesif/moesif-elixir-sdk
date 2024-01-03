@@ -42,7 +42,8 @@ defmodule MicroserviceApp.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
       {:plug_cowboy, "~> 2.5"},
-      {:elixir_uuid, "~> 1.2"}
+      {:elixir_uuid, "~> 1.2"},
+      {:httpoison, "~> 1.0"},
     ]
   end
 
