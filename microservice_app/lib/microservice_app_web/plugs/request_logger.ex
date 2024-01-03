@@ -1,4 +1,5 @@
 defmodule MicroserviceAppWeb.Plugs.RequestLogger do
+  import Plug.Conn
   require Logger
 
   def init(options), do: options
@@ -13,9 +14,11 @@ defmodule MicroserviceAppWeb.Plugs.RequestLogger do
     request_data = %{
       request: %{
         time: DateTime.utc_now() |> DateTime.to_iso8601(),
-      },
-      transaction_id: UUID.uuid4(),
-      direction: "Incoming",
+        uri: "#{conn.scheme}://#{conn.host}:#{conn.port}#{conn.request_path}",
+        verb: conn.method,
+        headers: conn.req_headers |> Enum.into(%{}),
+        body: conn.body_params |> Jason.encode!()
+      }
     }
 
     Logger.info("Request Data: #{Jason.encode!(request_data)}")
@@ -27,7 +30,11 @@ defmodule MicroserviceAppWeb.Plugs.RequestLogger do
       response: %{
         time: DateTime.utc_now() |> DateTime.to_iso8601(),
         status: conn.status,
-      }
+        headers: conn.resp_headers |> Enum.into(%{}),
+        body: conn.resp_body |> Jason.encode!()
+      },
+      transaction_id: UUID.uuid4(),
+      direction: "Incoming",
     }
 
     Logger.info("Response Data: #{Jason.encode!(response_data)}")
