@@ -2,6 +2,9 @@ defmodule MicroserviceAppWeb.Plugs.RequestLogger do
   import Plug.Conn
   require Logger
 
+  # URL for remote post constant
+  @remote_url "http://echo:5678/api/example"
+
   def init(options), do: options
 
   def call(conn, _opts) do
@@ -37,7 +40,7 @@ defmodule MicroserviceAppWeb.Plugs.RequestLogger do
       direction: "Incoming",
     }
 
-    response = post_to_remote("http://localhost:8080/echo", response_data)
+    response = post_to_remote(@remote_url, response_data)
     Logger.info("Response: #{inspect(response)}")
 
     conn

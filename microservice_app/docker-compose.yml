@@ -2,6 +2,12 @@ version: '3.8'
 services:
   web:
     build: .
+    image: moesif-phoenix-example:latest
     ports:
       - "4000:4000"
-    network_mode: bridge
+  echo:
+    image: hashicorp/http-echo
+    command:
+      - "-text=Hello from docker-compose"
+    ports:
+      - "5678:5678"
