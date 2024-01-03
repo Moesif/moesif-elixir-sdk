@@ -1,5 +1,4 @@
 defmodule MicroserviceAppWeb.Plugs.RequestLogger do
-  import Plug.Conn
   require Logger
 
   # URL for remote post constant
