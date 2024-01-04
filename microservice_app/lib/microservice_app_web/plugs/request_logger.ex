@@ -1,8 +1,11 @@
 defmodule MicroserviceAppWeb.Plugs.RequestLogger do
+  alias IEx.App
   require Logger
 
-  # URL for remote post constant
-  @remote_url "http://echo:5678/api/example"
+  @remote_url Application.get_env(:microservice_app, :request_logger)[:remote_url]
+  # auth token for remote post, this will always be configured and should be read as an env var
+  @application_id Application.get_env(:microservice_app, :request_logger)[:application_id]
+
 
   def init(options), do: options
 
@@ -48,7 +51,10 @@ defmodule MicroserviceAppWeb.Plugs.RequestLogger do
   defp post_to_remote(url, data) do
     body = Jason.encode!(data)
     Logger.info("Response Data: #{body}")
-    headers = [{"Content-Type", "application/json"}]
+    headers = [
+      {"Content-Type", "application/json"},
+      {"X-Moesif-Application-Id", @application_id},
+    ]
 
     HTTPoison.post(url, body, headers)
   end
