@@ -42,13 +42,13 @@ defmodule MicroserviceAppWeb.Plugs.RequestLogger do
       direction: "Incoming",
     }
 
-    response = post_to_remote(@remote_url, response_data)
+    response = post_to_remote(response_data)
     Logger.info("Response: #{inspect(response)}")
 
     conn
   end
 
-  defp post_to_remote(url, data) do
+  defp post_to_remote(data) do
     body = Jason.encode!(data)
     Logger.info("Response Data: #{body}")
     headers = [
@@ -56,6 +56,6 @@ defmodule MicroserviceAppWeb.Plugs.RequestLogger do
       {"X-Moesif-Application-Id", @application_id},
     ]
 
-    HTTPoison.post(url, body, headers)
+    HTTPoison.post(@remote_url, body, headers)
   end
 end
