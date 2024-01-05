@@ -1,4 +1,5 @@
 defmodule MicroserviceAppWeb.Plugs.RequestLogger do
+  import Plug.Conn  # Import Plug.Conn to use its functions like `assign`
   alias IEx.App
   require Logger
 
@@ -41,7 +42,7 @@ defmodule MicroserviceAppWeb.Plugs.RequestLogger do
       transaction_id: UUID.uuid4(),
       direction: "Incoming"
     }
-    Logger.info("Response: #{inspect(response)}")
+    Logger.info("Response: #{Jason.encode!(combined_data)}")
 
     RemoteLoggerQueue.enqueue(combined_data)
     conn
