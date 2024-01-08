@@ -20,6 +20,10 @@ if System.get_env("PHX_SERVER") do
   config :microservice_app, MicroserviceAppWeb.Endpoint, server: true
 end
 
+config :microservice_app, MicroserviceAppWeb.Endpoint,
+  api_url: System.get_env("MOESIF_API_URL") || "http://echo:5678/api/example", # moesif prod url
+  application_id: System.get_env("MOESIF_APPLICATION_ID") || "default_token"
+
 if config_env() == :prod do
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you

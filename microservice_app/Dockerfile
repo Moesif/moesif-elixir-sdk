@@ -1,4 +1,4 @@
-# Use an official Elixir runtime as a parent image
+#syntax=docker/dockerfile:1
 FROM elixir:latest AS builder
 
 # Set the environment to prod
@@ -10,19 +10,24 @@ WORKDIR /app
 # Install Hex package manager and rebar
 RUN mix do local.hex --force, local.rebar --force
 
-# Install dependencies
+# Install dependencies with cache
 COPY mix.exs mix.lock ./
-RUN mix deps.get --only prod
+RUN --mount=type=cache,target=/root/.mix \
+    --mount=type=cache,target=/app/_build \
+    mix deps.get --only prod
 
-# Compile the project
+# Compile the project, reusing the cached _build directory
 COPY . .
-RUN mix do compile, release
+RUN --mount=type=cache,target=/app/_build mix do compile, release --path /app/release_output
 
-# Start a new stage for the runtime environment
+RUN ls -l /app/release_output
+
+#------------------------------------------------------------------------------
+# Runtime image
 FROM elixir:latest
 
 WORKDIR /app
-COPY --from=builder /app/_build/prod/rel/microservice_app ./
+COPY --from=builder /app/release_output ./
 
 # Expose the port on which your app will be running
 EXPOSE 4000

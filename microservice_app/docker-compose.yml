@@ -3,8 +3,12 @@ services:
   web:
     build: .
     image: moesif-phoenix-example:latest
+    environment:
+      - MOESIF_API_URL=http://echo:5678/api/example
     ports:
       - "4000:4000"
+    depends_on:
+      - echo
   echo:
     image: hashicorp/http-echo
     command:
