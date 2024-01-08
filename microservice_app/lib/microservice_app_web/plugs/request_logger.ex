@@ -3,9 +3,9 @@ defmodule MicroserviceAppWeb.Plugs.RequestLogger do
   alias IEx.App
   require Logger
 
-  @remote_url Application.get_env(:microservice_app, :request_logger)[:remote_url]
+  @remote_url Application.get_env(:microservice_app, MicroserviceAppWeb.Endpoint)[:api_url]
   # auth token for remote post, this will always be configured and should be read as an env var
-  @application_id Application.get_env(:microservice_app, :request_logger)[:application_id]
+  @application_id Application.get_env(:microservice_app, MicroserviceAppWeb.Endpoint)[:application_id]
 
 
   def init(options), do: options
@@ -35,6 +35,7 @@ defmodule MicroserviceAppWeb.Plugs.RequestLogger do
       headers: conn.resp_headers |> Enum.into(%{}),
       body: conn.resp_body |> Jason.encode!()
     }
+    Logger.info("Response Data: #{Jason.encode!(response_data)}")
 
     combined_data = %{
       request: conn.assigns[:request_data],
@@ -42,20 +43,21 @@ defmodule MicroserviceAppWeb.Plugs.RequestLogger do
       transaction_id: UUID.uuid4(),
       direction: "Incoming"
     }
-    Logger.info("Response: #{Jason.encode!(combined_data)}")
 
-    RemoteLoggerQueue.enqueue(combined_data)
+    MicroserviceAppWeb.EventBatcher.enqueue(combined_data)
     conn
   end
 
-  defp post_to_remote(data) do
-    body = Jason.encode!(data)
-    Logger.info("Response Data: #{body}")
+  def post_to_remote(batch) do
+    Logger.info("Remote URL: #{@remote_url}")
+    body = Jason.encode!(batch)
+    Logger.info("Post Event Batch: #{body}")
     headers = [
       {"Content-Type", "application/json"},
       {"X-Moesif-Application-Id", @application_id},
     ]
 
-    HTTPoison.post(@remote_url, body, headers)
+    resp = HTTPoison.post(@remote_url, body, headers)
+    Logger.info("Response from Moesif: #{inspect(resp)}")
   end
 end

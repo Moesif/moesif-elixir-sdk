@@ -16,7 +16,9 @@ defmodule MicroserviceApp.Application do
       # Start a worker by calling: MicroserviceApp.Worker.start_link(arg)
       # {MicroserviceApp.Worker, arg},
       # Start to serve requests, typically the last entry
-      MicroserviceAppWeb.Endpoint
+      MicroserviceAppWeb.Endpoint,
+      # Start the EventBatcher GenServer
+      MicroserviceAppWeb.EventBatcher
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
