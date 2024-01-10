@@ -2,38 +2,51 @@ defmodule MicroserviceAppWeb.EventBatcher do
   use GenServer
   require Logger
 
-  @max_batch_size 3
-
-  # Starts the GenServer
-  def start_link(initial_state \\ []) do
-    Logger.info("Starting EventBatcher GenServer")
+  def start_link(_opts) do
+    # Fetch same Moesif runtime configuration as the RequestLogger Plug
+    config = Application.get_env(:microservice_app, MicroserviceAppWeb.Plugs.RequestLogger)
+    initial_state = %{config: config, data: []}
+    Logger.info("Starting EventBatcher GenServer with config #{inspect(config)}")
     GenServer.start_link(__MODULE__, initial_state, name: __MODULE__)
   end
 
-  # GenServer Callbacks
-  def init(state), do: {:ok, state}
-
-  # Public API to add data to the queue
-  def enqueue(data) do
-    Logger.info("Enqueueing data: #{inspect(data)}")
-    GenServer.cast(__MODULE__, {:enqueue, data})
+  def init(initial_state) do
+    {:ok, initial_state}
   end
 
-  # GenServer handle_cast callback
-  def handle_cast({:enqueue, data}, state) do
-    Logger.info("Handling cast: #{inspect(data)}")
-    new_state = [data | state]
-    if length(new_state) >= @max_batch_size do
-      Logger.info("Sending batch: #{inspect(new_state)}")
-      send_batch(new_state)
-      {:noreply, []}
-    else
-      Logger.info("Not sending batch of length #{length(new_state)}")
+  def enqueue(data) do
+    GenServer.cast(__MODULE__, {:enqueue, data, :os.system_time(:millisecond)})
+  end
+
+  def handle_cast({:enqueue, data, enqueue_time}, %{config: config, data: []} = state) do
+    # This is the first item in the batch, schedule a check
+    Process.send_after(__MODULE__, :check_batch, config[:max_batch_wait_time_ms])
+    new_data = [data]
+    new_state = %{state | data: new_data}
+    {:noreply, new_state}
+  end
+
+  def handle_cast({:enqueue, data, _enqueue_time}, %{config: config, data: current_data} = state) do
+    new_data = [data | current_data]
+
+    if length(new_data) >= config[:max_batch_size] do
+      Logger.info("Sending batch: #{inspect(new_data)}")
+      MicroserviceAppWeb.Plugs.RequestLogger.post_to_remote(new_data, config)
+      new_state = %{state | data: []}
       {:noreply, new_state}
+    else
+      {:noreply, %{state | data: new_data}}
     end
   end
 
-  defp send_batch(batch) do
-    MicroserviceAppWeb.Plugs.RequestLogger.post_to_remote(batch)
+  def handle_info(:check_batch, %{config: config, data: current_data} = state) do
+    if length(current_data) > 0 do
+      Logger.info("Sending batch due to time limit: #{inspect(current_data)}")
+      MicroserviceAppWeb.Plugs.RequestLogger.post_to_remote(current_data, config)
+      {:noreply, %{state | data: []}}
+    else
+      {:noreply, state}
+    end
   end
+
 end

@@ -3,20 +3,20 @@ defmodule MicroserviceAppWeb.Plugs.RequestLogger do
   alias IEx.App
   require Logger
 
-  @remote_url Application.get_env(:microservice_app, MicroserviceAppWeb.Plugs.RequestLogger)[:api_url]
-  # auth token for remote post, this will always be configured and should be read as an env var
-  @application_id Application.get_env(:microservice_app, MicroserviceAppWeb.Plugs.RequestLogger)[:application_id]
-
-
-  def init(options), do: options
+  # we do not use compile time config, so no need to do anything here
+  def init(_opts), do: :ok
 
   def call(conn, _opts) do
+    Logger.info("Calling RequestLogger Plug")
+    # Fetch runtime configuration
+    config = Application.get_env(:microservice_app, MicroserviceAppWeb.Plugs.RequestLogger)
+
     conn
-    |> log_request()
-    |> log_response()
+    |> log_request(config)
+    |> log_response(config)
   end
 
-  defp log_request(conn) do
+  defp log_request(conn, config) do
     request_data = %{
       time: DateTime.utc_now() |> DateTime.to_iso8601(),
       uri: "#{conn.scheme}://#{conn.host}:#{conn.port}#{conn.request_path}",
@@ -28,7 +28,7 @@ defmodule MicroserviceAppWeb.Plugs.RequestLogger do
     assign(conn, :request_data, request_data)
   end
 
-  defp log_response(conn) do
+  defp log_response(conn, config) do
     response_data = %{
       time: DateTime.utc_now() |> DateTime.to_iso8601(),
       status: conn.status,
@@ -48,16 +48,16 @@ defmodule MicroserviceAppWeb.Plugs.RequestLogger do
     conn
   end
 
-  def post_to_remote(batch) do
-    Logger.info("Remote URL: #{@remote_url}")
+  def post_to_remote(batch, config) do
+    Logger.info("Remote URL: #{config[:api_url]} Application ID: #{config[:application_id]}")
     body = Jason.encode!(batch)
     Logger.info("Post Event Batch: #{body}")
     headers = [
       {"Content-Type", "application/json"},
-      {"X-Moesif-Application-Id", @application_id},
+      {"X-Moesif-Application-Id", config[:application_id]},
     ]
 
-    resp = HTTPoison.post(@remote_url, body, headers)
+    resp = HTTPoison.post(config[:api_url], body, headers)
     Logger.info("Response from Moesif: #{inspect(resp)}")
   end
 end

@@ -15,10 +15,10 @@ defmodule MicroserviceApp.Application do
       {Finch, name: MicroserviceApp.Finch},
       # Start a worker by calling: MicroserviceApp.Worker.start_link(arg)
       # {MicroserviceApp.Worker, arg},
-      # Start to serve requests, typically the last entry
-      MicroserviceAppWeb.Endpoint,
       # Start the EventBatcher GenServer
-      MicroserviceAppWeb.EventBatcher
+      MicroserviceAppWeb.EventBatcher,
+      # Start to serve requests, typically the last entry
+      MicroserviceAppWeb.Endpoint
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
