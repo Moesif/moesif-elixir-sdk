@@ -3,9 +3,9 @@ defmodule MicroserviceAppWeb.Plugs.RequestLogger do
   alias IEx.App
   require Logger
 
-  @remote_url Application.get_env(:microservice_app, MicroserviceAppWeb.Endpoint)[:api_url]
+  @remote_url Application.get_env(:microservice_app, MicroserviceAppWeb.Plugs.RequestLogger)[:api_url]
   # auth token for remote post, this will always be configured and should be read as an env var
-  @application_id Application.get_env(:microservice_app, MicroserviceAppWeb.Endpoint)[:application_id]
+  @application_id Application.get_env(:microservice_app, MicroserviceAppWeb.Plugs.RequestLogger)[:application_id]
 
 
   def init(options), do: options

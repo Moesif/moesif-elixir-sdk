@@ -21,11 +21,6 @@ config :microservice_app, MicroserviceAppWeb.Endpoint,
   pubsub_server: MicroserviceApp.PubSub,
   live_view: [signing_salt: "wlvmCJIL"]
 
-# This is how we can configure Moesif config vars
-config :microservice_app, :request_logger, # TODO: I think this will need to be refactored into a separate Moesif Plug for our middleware
-  api_url: System.get_env("MOESIF_API_URL") || "http://echo:5678/api/example", # moesif prod url
-  application_id: System.get_env("MOESIF_APPLICATION_ID") || "default_token"
-
 # Configures the mailer
 #
 # By default it uses the "Local" adapter which stores the emails
