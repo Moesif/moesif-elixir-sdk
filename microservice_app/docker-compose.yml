@@ -4,7 +4,7 @@ services:
     build: .
     image: moesif-phoenix-example:latest
     environment:
-      - MOESIF_API_URL=http://echo:5678/api/example
+      - MOESIF_API_URL=https://api.moesif.net/v1/events/batch
     ports:
       - "4000:4000"
     depends_on:

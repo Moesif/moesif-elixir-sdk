@@ -13,7 +13,11 @@ defmodule MicroserviceAppWeb.Plugs.RequestLogger do
 
     conn
     |> log_request(config)
-    |> log_response(config)
+    |> register_before_send(fn conn ->
+      # Logging the request URI and response status
+      Logger.info("Response Status: #{conn.status}")
+      log_response(conn, config)
+    end)
   end
 
   defp log_request(conn, config) do
@@ -22,9 +26,8 @@ defmodule MicroserviceAppWeb.Plugs.RequestLogger do
       uri: "#{conn.scheme}://#{conn.host}:#{conn.port}#{conn.request_path}",
       verb: conn.method,
       headers: conn.req_headers |> Enum.into(%{}),
-      body: conn.body_params |> Jason.encode!()
+      body: conn.body_params
     }
-    Logger.info("Request Data: #{Jason.encode!(request_data)}")
     assign(conn, :request_data, request_data)
   end
 
@@ -33,9 +36,8 @@ defmodule MicroserviceAppWeb.Plugs.RequestLogger do
       time: DateTime.utc_now() |> DateTime.to_iso8601(),
       status: conn.status,
       headers: conn.resp_headers |> Enum.into(%{}),
-      body: conn.resp_body |> Jason.encode!()
+      body: conn.resp_body |> IO.chardata_to_string |> Jason.decode!()
     }
-    Logger.info("Response Data: #{Jason.encode!(response_data)}")
 
     combined_data = %{
       request: conn.assigns[:request_data],
