@@ -13,17 +13,22 @@ defmodule MicroserviceAppWeb.Plugs.RequestLogger do
 
     conn
     |> log_request(config)
-    |> register_before_send(fn conn ->
-      # Logging the request URI and response status
-      Logger.info("Response Status: #{conn.status}")
-      log_response(conn, config)
-    end)
+    |> register_before_send(fn conn -> log_response(conn, config) end)
   end
 
   defp log_request(conn, config) do
+    Logger.info("log_request")
+    full_uri = URI.to_string(%URI{
+      scheme: Atom.to_string(conn.scheme),
+      host: conn.host,
+      port: conn.port,
+      path: conn.request_path,
+      query: conn.query_string
+    })
+
     request_data = %{
       time: DateTime.utc_now() |> DateTime.to_iso8601(),
-      uri: "#{conn.scheme}://#{conn.host}:#{conn.port}#{conn.request_path}",
+      uri: full_uri,
       verb: conn.method,
       headers: conn.req_headers |> Enum.into(%{}),
       body: conn.body_params
