@@ -3,13 +3,12 @@ defmodule MicroserviceAppWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
-    plug MicroserviceAppWeb.Plugs.RequestLogger
   end
 
   scope "/api", MicroserviceAppWeb do
     pipe_through :api
 
-    get "/example", ExampleController, :index
+    post "/example", ExampleController, :index
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

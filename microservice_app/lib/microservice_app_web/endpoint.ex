@@ -37,6 +37,8 @@ defmodule MicroserviceAppWeb.Endpoint do
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
 
   plug Plug.Parsers,
+    parsers: [:json],
+    json_decoder: Jason
     parsers: [:urlencoded, :multipart, :json],
     pass: ["*/*"],
     json_decoder: Phoenix.json_library()

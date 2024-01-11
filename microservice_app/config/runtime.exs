@@ -23,6 +23,7 @@ end
 config :microservice_app,  MicroserviceAppWeb.Plugs.RequestLogger,
   api_url: System.get_env("MOESIF_API_URL") || "http://echo:5678/api/example", # moesif prod url
   application_id: System.get_env("MOESIF_APPLICATION_ID") || "default_token",
+  event_queue_size: String.to_integer(System.get_env("MOESIF_EVENT_QUEUE_SIZE") || "100000"),
   max_batch_size: String.to_integer(System.get_env("MOESIF_MAX_BATCH_SIZE") || "10"),
   max_batch_wait_time_ms: String.to_integer(System.get_env("MOESIF_MAX_BATCH_WAIT_TIME_MS") || "2000")
 
