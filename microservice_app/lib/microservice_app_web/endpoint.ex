@@ -39,9 +39,11 @@ defmodule MicroserviceAppWeb.Endpoint do
   plug Plug.Parsers,
     parsers: [:json],
     json_decoder: Jason
-    parsers: [:urlencoded, :multipart, :json],
-    pass: ["*/*"],
-    json_decoder: Phoenix.json_library()
+
+  plug MicroserviceAppWeb.Plugs.RequestLogger, [
+    get_user_id: &MicroserviceAppWeb.Plugs.RequestLogger.get_user_id/1,
+    get_company_id: &MicroserviceAppWeb.Plugs.RequestLogger.get_company_id/1
+  ]
 
   plug Plug.MethodOverride
   plug Plug.Head
