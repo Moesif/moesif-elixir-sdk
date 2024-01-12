@@ -8,12 +8,22 @@ defmodule MoesifApi.Plug.EventLogger do
 
   def call(conn, opts) do
     # Fetch runtime configuration and merge with compile time config
-    config = Map.merge(Enum.into(Application.get_env(:microservice_app, MoesifApi.Plug.EventLogger), %{}), Enum.into(opts, %{}))
+    config = Enum.into(opts, default_config())
     Logger.info("Calling RequestLogger Plug with config #{inspect(config)}")
 
     conn
     |> log_request(config)
     |> register_before_send(fn conn -> log_response(conn, config) end)
+  end
+
+  defp default_config do
+    [
+      api_url: "https://api.moesif.net/v1",
+      application_id: "Your Moesif Application ID Here",
+      event_queue_size: 100_000,
+      max_batch_size: 100,
+      max_batch_wait_time_ms: 2_000
+    ]
   end
 
   defp log_request(conn, config) do
@@ -24,7 +34,7 @@ defmodule MoesifApi.Plug.EventLogger do
       path: conn.request_path,
       query: conn.query_string
     })
-    Logger.info("request.body_params #{inspect(conn.body_params)}")
+    Logger.debug("request.body_params #{inspect(conn.body_params)}")
     # if the body_params has the :all_nested special key "_json", then read that value; otherwise, use top-level body_params
     body = Map.get(conn.body_params, "_json", conn.body_params)
 

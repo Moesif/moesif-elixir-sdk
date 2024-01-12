@@ -1,5 +1,5 @@
 #syntax=docker/dockerfile:1
-FROM elixir:latest AS builder
+FROM elixir:latest AS builder       
 
 # Set the environment to prod
 ENV MIX_ENV=prod

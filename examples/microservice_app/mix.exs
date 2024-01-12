@@ -44,6 +44,7 @@ defmodule MicroserviceApp.MixProject do
       {:plug_cowboy, "~> 2.5"},
       {:elixir_uuid, "~> 1.2"},
       {:httpoison, "~> 1.0"},
+      {:moesif_api, path: "../../moesif_elixir_plug", override: true},
     ]
   end
 
