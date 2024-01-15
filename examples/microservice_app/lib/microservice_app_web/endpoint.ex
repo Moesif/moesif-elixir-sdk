@@ -40,10 +40,7 @@ defmodule MicroserviceAppWeb.Endpoint do
     parsers: [:json],
     json_decoder: Jason
 
-  plug MoesifApi.Plug.EventLogger, [
-    get_user_id: &MicroserviceAppWeb.Plugs.RequestLogger.get_user_id/1,
-    get_company_id: &MicroserviceAppWeb.Plugs.RequestLogger.get_company_id/1
-  ]
+  plug MoesifApi.Plug.EventLogger
 
   plug Plug.MethodOverride
   plug Plug.Head

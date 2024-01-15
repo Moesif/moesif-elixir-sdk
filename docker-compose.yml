@@ -4,7 +4,6 @@ services:
     build: .
     image: moesif-phoenix-example:latest
     environment:
-      - MOESIF_API_URL=https://api.moesif.net/v1/events/batch
       - MOESIF_APPLICATION_ID=eyJhcHAiOiI2NjA6NDkxIiwidmVyIjoiMi4xIiwib3JnIjoiNjQwOjEyOCIsImlhdCI6MTcwNDA2NzIwMH0.lANp1qRVDW_QKh4npDl4LlgUZvllE0h8gsNR09enZjY
     ports:
       - "4000:4000"

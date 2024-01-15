@@ -4,26 +4,18 @@ defmodule MoesifApi.Plug.EventLogger do
   require Logger
 
   # we do not use compile time config, so no need to do anything here
-  def init(opts), do: opts
+  def init(opts) do
+    opts
+  end
 
   def call(conn, opts) do
     # Fetch runtime configuration and merge with compile time config
-    config = Enum.into(opts, default_config())
-    Logger.info("Calling RequestLogger Plug with config #{inspect(config)}")
+    config = MoesifApi.Config.fetch_config(opts)
+    Logger.info("Calling EventLogger Plug with config #{inspect(config)}")
 
     conn
     |> log_request(config)
     |> register_before_send(fn conn -> log_response(conn, config) end)
-  end
-
-  defp default_config do
-    [
-      api_url: "https://api.moesif.net/v1",
-      application_id: "Your Moesif Application ID Here",
-      event_queue_size: 100_000,
-      max_batch_size: 100,
-      max_batch_wait_time_ms: 2_000
-    ]
   end
 
   defp log_request(conn, config) do
@@ -42,6 +34,8 @@ defmodule MoesifApi.Plug.EventLogger do
     # Safely fetch and call getter functions or default to nil
     user_id = safely_invoke_getter(config, :get_user_id, conn)
     company_id = safely_invoke_getter(config, :get_company_id, conn)
+    session_token = safely_invoke_getter(config, :get_session_token, conn)
+    metadata = safely_invoke_getter(config, :get_metadata, conn)
 
     event = %{
       request: %{
@@ -51,13 +45,13 @@ defmodule MoesifApi.Plug.EventLogger do
         headers: conn.req_headers |> Enum.into(%{}),
         body: body
       },
-      response: nil,
       user_id: user_id,
       company_id: company_id,
-      session_token: nil,
-      metadata: nil,
+      session_token: session_token,
+      metadata: metadata,
       transaction_id: UUID.uuid4(),
-      direction: "Incoming"
+      direction: "Incoming",
+      response: nil, # will be filled in if received in log_response
     }
     assign(conn, :moesif_event, event)
   end
@@ -74,21 +68,8 @@ defmodule MoesifApi.Plug.EventLogger do
     event = Map.put(event, :response, response_data)
     Logger.info inspect(event, pretty: true)
 
-    MicroserviceAppWeb.EventBatcher.enqueue(event)
+    MoesifApi.EventBatcher.enqueue(event)
     conn
-  end
-
-  def post_to_remote(batch, config) do
-    Logger.info("Remote URL: #{config[:api_url]} Application ID: #{config[:application_id]}")
-    body = Jason.encode!(batch)
-    Logger.info("Post Event Batch: #{body}")
-    headers = [
-      {"Content-Type", "application/json"},
-      {"X-Moesif-Application-Id", config[:application_id]},
-    ]
-
-    resp = HTTPoison.post(config[:api_url], body, headers)
-    Logger.info("Response from Moesif: #{inspect(resp)}")
   end
 
   defp safely_invoke_getter(config, getter_key, conn) do

@@ -5,20 +5,22 @@ FROM elixir:latest AS builder
 ENV MIX_ENV=prod
 
 # Create and set the working directory
-WORKDIR /app
+WORKDIR /app/examples/microservice_app
 
 # Install Hex package manager and rebar
 RUN mix do local.hex --force, local.rebar --force
 
 # Install dependencies with cache
-COPY mix.exs mix.lock ./
+COPY examples/microservice_app/mix.exs examples/microservice_app/mix.lock ./
 RUN --mount=type=cache,target=/root/.mix \
     --mount=type=cache,target=/app/_build \
     mix deps.get --only prod
 
 # Compile the project, reusing the cached _build directory
-COPY . .
-RUN --mount=type=cache,target=/app/_build mix do compile, release --path /app/release_output
+COPY . /app
+
+WORKDIR /app/examples/microservice_app
+RUN --mount=type=cache,target=/app/examples/microservice_app/_build mix do compile, release --path /app/release_output
 
 RUN ls -l /app/release_output
 

@@ -16,7 +16,7 @@ defmodule MicroserviceApp.Application do
       # Start a worker by calling: MicroserviceApp.Worker.start_link(arg)
       # {MicroserviceApp.Worker, arg},
       # Start the EventBatcher GenServer
-      MicroserviceAppWeb.EventBatcher,
+      MoesifApi.EventBatcher,
       # Start to serve requests, typically the last entry
       MicroserviceAppWeb.Endpoint
     ]
