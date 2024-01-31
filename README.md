@@ -21,7 +21,7 @@ Moesif API Elixir Plug enables your application to:
    ```elixir
    def deps do
      [
-       {:moesif_api_plug, "~> 0.1.0"}
+       {:moesif_api, "~> 0.1.0"}
      ]
    end
    ```
@@ -29,6 +29,8 @@ Moesif API Elixir Plug enables your application to:
 2. Fetch the dependency by running `mix deps.get`.
 
 ## Usage
+
+Checkout the example application at https://github.com/Moesif/moesif-elixir-phoenix-quickstart
 
 1. Add the Plug to your Phoenix endpoint or router in `endpoint.ex`:
 
@@ -42,7 +44,7 @@ Moesif API Elixir Plug enables your application to:
 2. Configure the Plug in `config/runtime.exs`:
 
    ```elixir
-   config :moesif_api, MoesifApi.Plug.EventLogger,
+   config :moesif_api, ,
      application_id: System.get_env("MOESIF_APPLICATION_ID") || "Your Moesif Application ID",
      event_queue_size: String.to_integer(System.get_env("MOESIF_EVENT_QUEUE_SIZE") || "100000"),
      max_batch_size: String.to_integer(System.get_env("MOESIF_MAX_BATCH_SIZE") || "10"),
@@ -55,6 +57,10 @@ Moesif API Elixir Plug enables your application to:
 - `event_queue_size`: Size of the event queue for batching requests.
 - `max_batch_size`: Maximum number of events per batch.
 - `max_batch_wait_time_ms`: Maximum wait time in milliseconds before sending a batch.
+- `get_user_id`: Function to extract user ID from the request.
+- `get_company_id`: Function to extract company ID from the request.
+- `get_session_token`: Function to extract session token from the request.
+- `get_metadata`: Function to extract metadata from the request.
 
 ## Identifying Users and Companies
 
