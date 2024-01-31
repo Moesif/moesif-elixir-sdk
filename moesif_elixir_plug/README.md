@@ -42,7 +42,7 @@ Moesif API Elixir Plug enables your application to:
 2. Configure the Plug in `config/runtime.exs`:
 
    ```elixir
-   config :microservice_app, MoesifApi.Plug.EventLogger,
+   config :moesif_api, MoesifApi.Plug.EventLogger,
      application_id: System.get_env("MOESIF_APPLICATION_ID") || "Your Moesif Application ID",
      event_queue_size: String.to_integer(System.get_env("MOESIF_EVENT_QUEUE_SIZE") || "100000"),
      max_batch_size: String.to_integer(System.get_env("MOESIF_MAX_BATCH_SIZE") || "10"),
