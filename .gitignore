@@ -25,3 +25,4 @@ tmp
 # Ignore package tarball (built via "mix hex.build").
 *.tar
 
+.elixir_ls/
