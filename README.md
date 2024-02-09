@@ -44,7 +44,7 @@ Checkout the example application at https://github.com/Moesif/moesif-elixir-phoe
 2. Configure the Plug in `config/runtime.exs`:
 
    ```elixir
-   config :moesif_api, ,
+   config :moesif_api, :config,
      application_id: System.get_env("MOESIF_APPLICATION_ID") || "Your Moesif Application ID",
      event_queue_size: String.to_integer(System.get_env("MOESIF_EVENT_QUEUE_SIZE") || "100000"),
      max_batch_size: String.to_integer(System.get_env("MOESIF_MAX_BATCH_SIZE") || "10"),
