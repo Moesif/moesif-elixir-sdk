@@ -1,5 +1,4 @@
 defmodule MoesifApi.Plug.EventLogger do
-  alias ElixirSense.Log
   import Plug.Conn  # Import Plug.Conn to use its functions like `assign`
   require Logger
 
@@ -9,16 +8,17 @@ defmodule MoesifApi.Plug.EventLogger do
   end
 
   def call(conn, opts) do
-    # Fetch runtime configuration and merge with compile time config
     config = MoesifApi.Config.fetch_config(opts)
     Logger.info("Calling EventLogger Plug with config #{inspect(config)}")
 
     conn
+    |> ensure_body_cached(config)
     |> log_request(config)
     |> register_before_send(fn conn -> log_response(conn, config) end)
   end
 
   defp log_request(conn, config) do
+    Logger.info(inspect(conn))
     full_uri = URI.to_string(%URI{
       scheme: Atom.to_string(conn.scheme),
       host: conn.host,
@@ -27,15 +27,12 @@ defmodule MoesifApi.Plug.EventLogger do
       query: conn.query_string
     })
     Logger.debug("request.body_params #{inspect(conn.body_params)}")
-    # if the body_params has the :all_nested special key "_json", then read that value; otherwise, use top-level body_params
-    body = Map.get(conn.body_params, "_json", conn.body_params)
-
-
     # Safely fetch and call getter functions or default to nil
     user_id = safely_invoke_getter(config, :get_user_id, conn)
     company_id = safely_invoke_getter(config, :get_company_id, conn)
     session_token = safely_invoke_getter(config, :get_session_token, conn)
     metadata = safely_invoke_getter(config, :get_metadata, conn)
+    {body, transfer_encoding} = process_body(conn.assigns[:raw_body])
 
     event = %{
       request: %{
@@ -43,7 +40,8 @@ defmodule MoesifApi.Plug.EventLogger do
         uri: full_uri,
         verb: conn.method,
         headers: conn.req_headers |> Enum.into(%{}),
-        body: body
+        body: body,
+        transfer_encoding: transfer_encoding
       },
       user_id: user_id,
       company_id: company_id,
@@ -58,11 +56,13 @@ defmodule MoesifApi.Plug.EventLogger do
 
   defp log_response(conn, _config) do
     Logger.info("log_response")
+    {body, transfer_encoding} = process_body(conn.resp_body)
     response_data = %{
       time: DateTime.utc_now() |> DateTime.to_iso8601(),
       status: conn.status,
       headers: conn.resp_headers |> Enum.into(%{}),
-      body: conn.resp_body |> IO.chardata_to_string |> Jason.decode!()
+      body: body,
+      transfer_encoding: transfer_encoding
     }
     event = conn.assigns[:moesif_event]
     event = Map.put(event, :response, response_data)
@@ -70,6 +70,30 @@ defmodule MoesifApi.Plug.EventLogger do
 
     MoesifApi.EventBatcher.enqueue(event)
     conn
+  end
+
+  defp ensure_body_cached(conn, config) do
+    if !Map.has_key?(conn.assigns, config[:raw_request_body_key]) do
+        {_, _, conn} = MoesifApi.CacheBodyReader.read_body(conn, [])
+        conn
+    end
+    conn
+  end
+
+  # If the body is empty or nil, we can omit it's info from the event
+  defp process_body(body) when body == "" or body == nil, do: {nil, nil}
+
+  defp process_body(body) do
+    body
+    |> IO.chardata_to_string()
+    |> try_decode_json()
+  end
+
+  defp try_decode_json(body) do
+    case Jason.decode(body) do
+      {:ok, decoded} -> {decoded, "json"}
+      {:error, _} -> {Base.encode64(body), "base64"}
+    end
   end
 
   defp safely_invoke_getter(config, getter_key, conn) do
