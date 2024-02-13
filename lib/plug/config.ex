@@ -11,7 +11,8 @@ defmodule MoesifApi.Config do
       application_id: "Your Moesif Application Id",
       event_queue_size: 100_000,
       max_batch_size: 100,
-      max_batch_wait_time_ms: 2_000
+      max_batch_wait_time_ms: 2_000,
+      raw_request_body_key: :raw_body,
     ]
   end
 end

@@ -68,14 +68,14 @@ defmodule MoesifApi.EventBatcher do
   defp retry_post(url, body, headers, max_retries) do
     case HTTPoison.post(url, body, headers) do
       {:ok, %HTTPoison.Response{status_code: code, body: response_body}} when code in 400..599 ->
-        Logger.warn("Received #{code} response. Retrying... (#{max_retries} attempts left)")
+        Logger.warning("Received #{code} response. Retrying... (#{max_retries} attempts left)")
         handle_retry(url, body, headers, max_retries, response_body)
 
       {:ok, resp} ->
         Logger.info("Response from Moesif: #{inspect(resp)}")
 
-      {:error, _} = error ->
-        Logger.warn("Failed to send request due to client error. Retrying... (#{max_retries} attempts left)")
+      {:error, _} = _error ->
+        Logger.warning("Failed to send request due to client error. Retrying... (#{max_retries} attempts left)")
         handle_retry(url, body, headers, max_retries, "Client error")
     end
   end
