@@ -30,7 +30,7 @@ Moesif API Elixir Plug enables your application to:
 
 ## Usage
 
-Checkout the example application at https://github.com/Moesif/moesif-elixir-phoenix-quickstart
+Check out the example application at https://github.com/Moesif/moesif-elixir-phoenix-quickstart
 
 1. Add the Plug to your Phoenix endpoint or router in `endpoint.ex`:
 
@@ -41,22 +41,48 @@ Checkout the example application at https://github.com/Moesif/moesif-elixir-phoe
    ]
    ```
 
-2. Configure the Plug in `config/runtime.exs`:
+2. Configure the Plug in as the example below. Replace `Your Moesif Application Id` with your Moesif application ID.  The others are optional with production defaults.
 
    ```elixir
    config :moesif_api, :config,
-     application_id: System.get_env("MOESIF_APPLICATION_ID") || "Your Moesif Application ID",
-     event_queue_size: String.to_integer(System.get_env("MOESIF_EVENT_QUEUE_SIZE") || "100000"),
-     max_batch_size: String.to_integer(System.get_env("MOESIF_MAX_BATCH_SIZE") || "10"),
-     max_batch_wait_time_ms: String.to_integer(System.get_env("MOESIF_MAX_BATCH_WAIT_TIME_MS") || "2000")
+      application_id: "Your Moesif Application Id",
+      event_queue_size: 100_000,
+      max_batch_size: 100,
+      max_batch_wait_time_ms: 2_000,
+      raw_request_body_key: :raw_body,
    ```
+
+3. If you are using Parsers, you need to use `MoesifApi.CacheBodyReader` to cache the request body. Add the following to your `endpoint.ex`:
+
+   ```elixir
+   plug Plug.Parsers,
+     parsers: [:urlencoded, :json],
+     pass: ["text/*"],
+     body_reader: {MoesifApi.CacheBodyReader, :read_body, []},
+     json_decoder: Jason
+   ```
+
+### Using CacheBodyReader for Request Body Caching
+
+When using parsers that read the request body, such as for JSON or URL-encoded data, it's crucial to ensure the Moesif API Elixir Plug can also access the request body for logging. This is where MoesifApi.CacheBodyReader, a custom reader for Plug.Parsers, comes into play.
+
+#### Accessing Cached Body
+
+After setting up CacheBodyReader, you can access the cached body with the configured key (default :raw_body) in your controllers or other plugs, as required:
+
+```elixir
+def your_function(conn, _params) do
+  cached_body = conn.assigns[:raw_body]  # Use the configured key if different
+end
+```
 
 ## Configuration
 
-- `application_id`: Moesif application ID for authentication.
-- `event_queue_size`: Size of the event queue for batching requests.
-- `max_batch_size`: Maximum number of events per batch.
-- `max_batch_wait_time_ms`: Maximum wait time in milliseconds before sending a batch.
+- `application_id`: Moesif application ID for authentication. **Required**.
+- `event_queue_size`: Size of the event queue for batching requests. Default is 100,000.
+- `max_batch_size`: Maximum number of events per batch. Default is 100.
+- `max_batch_wait_time_ms`: Maximum wait time in milliseconds before sending a batch. Default is 2,000.
+- `raw_request_body_key`: Key to access the cached request body in the connection. Default is `:raw_body`.
 - `get_user_id`: Function to extract user ID from the request.
 - `get_company_id`: Function to extract company ID from the request.
 - `get_session_token`: Function to extract session token from the request.
