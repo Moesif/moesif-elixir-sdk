@@ -32,7 +32,13 @@ defmodule MoesifApi.Plug.EventLogger do
     company_id = safely_invoke_getter(config, :get_company_id, conn)
     session_token = safely_invoke_getter(config, :get_session_token, conn)
     metadata = safely_invoke_getter(config, :get_metadata, conn)
+    should_skip = safely_invoke_getter(config, :skip, conn)
     {body, transfer_encoding} = process_body(conn.assigns[:raw_body])
+
+    if should_skip do
+      Logger.info("Skipping logging for this request")
+      return conn
+    end
 
     event = %{
       request: %{
