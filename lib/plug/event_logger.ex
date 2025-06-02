@@ -9,7 +9,9 @@ defmodule MoesifApi.Plug.EventLogger do
 
   def call(conn, opts) do
     config = MoesifApi.Config.fetch_config(opts)
-    Logger.info("Calling EventLogger Plug with config #{inspect(config)}")
+    if debug_enabled?(config) do
+      Logger.info("Calling EventLogger Plug with config #{inspect(config)}")
+    end
 
     conn
     |> ensure_body_cached(config)
@@ -18,7 +20,9 @@ defmodule MoesifApi.Plug.EventLogger do
   end
 
   defp log_request(conn, config) do
-    Logger.info(inspect(conn))
+    if debug_enabled?(config) do
+      Logger.info(inspect(conn))
+    end
     full_uri = URI.to_string(%URI{
       scheme: Atom.to_string(conn.scheme),
       host: conn.host,
@@ -36,7 +40,9 @@ defmodule MoesifApi.Plug.EventLogger do
     {body, transfer_encoding} = process_body(conn.assigns[:raw_body])
 
     if should_skip do
-      Logger.info("Skipping logging for this request")
+      if debug_enabled?(config) do
+        Logger.info("Skipping logging for this request")
+      end
       return conn
     end
 
@@ -60,8 +66,10 @@ defmodule MoesifApi.Plug.EventLogger do
     assign(conn, :moesif_event, event)
   end
 
-  defp log_response(conn, _config) do
-    Logger.info("log_response")
+  defp log_response(conn, config) do
+    if debug_enabled?(config) do
+      Logger.info("log_response")
+    end
     {body, transfer_encoding} = process_body(conn.resp_body)
     response_data = %{
       time: DateTime.utc_now() |> DateTime.to_iso8601(),
@@ -72,7 +80,9 @@ defmodule MoesifApi.Plug.EventLogger do
     }
     event = conn.assigns[:moesif_event]
     event = Map.put(event, :response, response_data)
-    Logger.info inspect(event, pretty: true)
+    if debug_enabled?(config) do
+      Logger.info inspect(event, pretty: true)
+    end
 
     MoesifApi.EventBatcher.enqueue(event)
     conn
@@ -108,6 +118,10 @@ defmodule MoesifApi.Plug.EventLogger do
       getter_fun when is_function(getter_fun, 1) -> getter_fun.(conn)
       _ -> nil
     end
+  end
+
+  defp debug_enabled?(config) do
+    config[:debug] == true
   end
 
 end
