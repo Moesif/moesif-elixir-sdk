@@ -4,7 +4,7 @@ defmodule MoesifApi.MixProject do
   def project do
     [
       app: :moesif_api,
-      version: "0.2.0",
+      version: "0.2.1",
       elixir: "~> 1.14",
       deps: deps(),
       description: "The Moesif API Elixir Plug is a sophisticated API monitoring and analytics tool tailored for Elixir and Phoenix applications.",
