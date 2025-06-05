@@ -43,7 +43,7 @@ defmodule MoesifApi.Plug.EventLogger do
       if debug_enabled?(config) do
         Logger.info("Skipping logging for this request")
       end
-      return conn
+      conn
     end
 
     event = %{
