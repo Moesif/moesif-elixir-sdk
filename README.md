@@ -87,6 +87,8 @@ end
 - `get_company_id`: Function to extract company ID from the request.
 - `get_session_token`: Function to extract session token from the request.
 - `get_metadata`: Function to extract metadata from the request.
+- `skip`: Function to skip logging if returns true.
+- `debug`: Boolean to indicate should log debug messages.
 
 ## Identifying Users and Companies
 
