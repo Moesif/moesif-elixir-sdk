@@ -1,6 +1,7 @@
 defmodule MoesifApi.Plug.EventLogger do
   import Plug.Conn  # Import Plug.Conn to use its functions like `assign`
-  require Logger
+
+  alias MoesifApi.Logger
 
   # we do not use compile time config, so no need to do anything here
   def init(opts) do
@@ -9,20 +10,21 @@ defmodule MoesifApi.Plug.EventLogger do
 
   def call(conn, opts) do
     config = MoesifApi.Config.fetch_config(opts)
-    if debug_enabled?(config) do
-      Logger.info("Calling EventLogger Plug with config #{inspect(config)}")
-    end
+    should_skip = safely_invoke_getter(config, :skip, conn)
 
-    conn
-    |> ensure_body_cached(config)
-    |> log_request(config)
-    |> register_before_send(fn conn -> log_response(conn, config) end)
+    # Skip the event if the `skip` configuration option is set before the request is logged
+    if should_skip do
+      Logger.info("Skipped event using `skip` configuration option.")
+      conn
+    else
+      conn
+      |> ensure_body_cached(config)
+      |> log_request(config)
+      |> register_before_send(fn conn -> log_response(conn) end)
+    end
   end
 
   defp log_request(conn, config) do
-    if debug_enabled?(config) do
-      Logger.info(inspect(conn))
-    end
     full_uri = URI.to_string(%URI{
       scheme: Atom.to_string(conn.scheme),
       host: conn.host,
@@ -30,21 +32,12 @@ defmodule MoesifApi.Plug.EventLogger do
       path: conn.request_path,
       query: conn.query_string
     })
-    Logger.debug("request.body_params #{inspect(conn.body_params)}")
     # Safely fetch and call getter functions or default to nil
     user_id = safely_invoke_getter(config, :get_user_id, conn)
     company_id = safely_invoke_getter(config, :get_company_id, conn)
     session_token = safely_invoke_getter(config, :get_session_token, conn)
     metadata = safely_invoke_getter(config, :get_metadata, conn)
-    should_skip = safely_invoke_getter(config, :skip, conn)
     {body, transfer_encoding} = process_body(conn.assigns[:raw_body])
-
-    if should_skip do
-      if debug_enabled?(config) do
-        Logger.info("Skipping logging for this request")
-      end
-      conn
-    end
 
     event = %{
       request: %{
@@ -66,10 +59,7 @@ defmodule MoesifApi.Plug.EventLogger do
     assign(conn, :moesif_event, event)
   end
 
-  defp log_response(conn, config) do
-    if debug_enabled?(config) do
-      Logger.info("log_response")
-    end
+  defp log_response(conn) do
     {body, transfer_encoding} = process_body(conn.resp_body)
     response_data = %{
       time: DateTime.utc_now() |> DateTime.to_iso8601(),
@@ -80,10 +70,7 @@ defmodule MoesifApi.Plug.EventLogger do
     }
     event = conn.assigns[:moesif_event]
     event = Map.put(event, :response, response_data)
-    if debug_enabled?(config) do
-      Logger.info inspect(event, pretty: true)
-    end
-
+    Logger.info(inspect(event))
     MoesifApi.EventBatcher.enqueue(event)
     conn
   end
@@ -118,10 +105,6 @@ defmodule MoesifApi.Plug.EventLogger do
       getter_fun when is_function(getter_fun, 1) -> getter_fun.(conn)
       _ -> nil
     end
-  end
-
-  defp debug_enabled?(config) do
-    config[:debug] == true
   end
 
 end

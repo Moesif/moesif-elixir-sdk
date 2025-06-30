@@ -1,6 +1,7 @@
 defmodule MoesifApi.EventBatcher do
   use GenServer
-  require Logger
+
+  alias MoesifApi.Logger
 
   def start_link(opts) do
     config = MoesifApi.Config.fetch_config(opts)
@@ -49,7 +50,6 @@ defmodule MoesifApi.EventBatcher do
   end
 
   def post_to_remote(batch, config) do
-    Logger.info("Remote URL: #{config[:api_url]} Application ID: #{config[:application_id]}")
     body = Jason.encode!(batch)
     Logger.info("Post Event Batch: #{body}")
     headers = [

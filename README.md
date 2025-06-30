@@ -52,7 +52,20 @@ Check out the example application at https://github.com/Moesif/moesif-elixir-pho
       raw_request_body_key: :raw_body,
    ```
 
-3. If you are using Parsers, you need to use `MoesifApi.CacheBodyReader` to cache the request body. Add the following to your `endpoint.ex`:
+3. Add `MoesifApi.EventBatcher` in `application.ex` to handle event batching and sending to Moesif.
+
+  ```elixir
+  def start(...) do
+    children = [
+      ...,
+      MoesifApi.EventBatcher,
+      ...
+    ]
+    Supervisor.start_link(children, opts)
+  end
+  ```
+
+4. If you are using Parsers, you need to use `MoesifApi.CacheBodyReader` to cache the request body. Add the following to your `endpoint.ex`:
 
    ```elixir
    plug Plug.Parsers,
@@ -88,7 +101,7 @@ end
 - `get_session_token`: Function to extract session token from the request.
 - `get_metadata`: Function to extract metadata from the request.
 - `skip`: Function to skip logging if returns true.
-- `debug`: Boolean to indicate should log debug messages.
+- `debug`: Boolean to indicate should log debug messages. Default is `false`.
 
 ## Identifying Users and Companies
 
