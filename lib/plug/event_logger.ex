@@ -10,7 +10,7 @@ defmodule MoesifApi.Plug.EventLogger do
 
   def call(conn, opts) do
     config = MoesifApi.Config.fetch_config(opts)
-    should_skip = safely_invoke_getter(config, :skip, conn)
+    should_skip = MoesifApi.safely_invoke_getter(config, :skip, conn)
 
     # Skip the event if the `skip` configuration option is set before the request is logged
     if should_skip do
@@ -33,10 +33,10 @@ defmodule MoesifApi.Plug.EventLogger do
       query: conn.query_string
     })
     # Safely fetch and call getter functions or default to nil
-    user_id = safely_invoke_getter(config, :get_user_id, conn)
-    company_id = safely_invoke_getter(config, :get_company_id, conn)
-    session_token = safely_invoke_getter(config, :get_session_token, conn)
-    metadata = safely_invoke_getter(config, :get_metadata, conn)
+    user_id = MoesifApi.safely_invoke_getter(config, :get_user_id, conn)
+    company_id = MoesifApi.safely_invoke_getter(config, :get_company_id, conn)
+    session_token = MoesifApi.safely_invoke_getter(config, :get_session_token, conn)
+    metadata = MoesifApi.safely_invoke_getter(config, :get_metadata, conn)
     {body, transfer_encoding} = process_body(conn.assigns[:raw_body])
 
     event = %{
@@ -96,14 +96,6 @@ defmodule MoesifApi.Plug.EventLogger do
     case Jason.decode(body) do
       {:ok, decoded} -> {decoded, "json"}
       {:error, _} -> {Base.encode64(body), "base64"}
-    end
-  end
-
-  defp safely_invoke_getter(config, getter_key, conn) do
-    case config[getter_key] do
-      nil -> nil
-      getter_fun when is_function(getter_fun, 1) -> getter_fun.(conn)
-      _ -> nil
     end
   end
 
