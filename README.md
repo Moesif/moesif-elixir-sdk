@@ -89,6 +89,25 @@ def your_function(conn, _params) do
 end
 ```
 
+### Capture Outgoing Requests with Tesla
+
+To log outgoing HTTP requests made with Tesla, you can use the `MoesifApi.Middlewares.TeslaLogger` middleware. This will capture and log outgoing requests and responses to Moesif.
+
+#### 1. Add the Middleware to Your Tesla Client
+
+Add `MoesifApi.Middlewares.TeslaLogger` to your Tesla middleware stack. For example:
+
+```elixir
+Tesla.client(
+  [
+    ...
+    {MoesifApi.Middlewares.TeslaLogger, Application.get_env(:moesif_api, :config)},
+    ...
+  ],
+  ...
+)
+```
+
 ## Configuration
 
 - `application_id`: Moesif application ID for authentication. **Required**.
@@ -100,7 +119,9 @@ end
 - `get_company_id`: Function to extract company ID from the request.
 - `get_session_token`: Function to extract session token from the request.
 - `get_metadata`: Function to extract metadata from the request.
-- `skip`: Function to skip logging if returns true.
+- `capture_outgoing_requests`: Boolean or Function to capture outgoing requests if returns true.
+- `skip`: Boolean or Function to skip logging if returns true.
+- `skip_outgoing`: Boolean or Function to skip logging outgoing requests if returns true.
 - `debug`: Boolean to indicate should log debug messages. Default is `false`.
 
 ## Identifying Users and Companies
