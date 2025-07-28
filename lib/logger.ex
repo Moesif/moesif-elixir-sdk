@@ -55,6 +55,6 @@ defmodule MoesifApi.Logger do
   # Returns true if debug is enabled, false otherwise.
   defp debug_enabled?() do
     config = MoesifApi.Config.fetch_config()
-    config[:debug] == true
+    config[:debug]
   end
 end

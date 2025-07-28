@@ -13,7 +13,10 @@ defmodule MoesifApi.Config do
       max_batch_size: 100,
       max_batch_wait_time_ms: 2_000,
       raw_request_body_key: :raw_body,
-      debug: false,
+      capture_outgoing_requests: false,
+      skip: false,
+      skip_outgoing: false,
+      debug: false
     ]
   end
 end
