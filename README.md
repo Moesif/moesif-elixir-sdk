@@ -21,7 +21,7 @@ Moesif API Elixir Plug enables your application to:
    ```elixir
    def deps do
      [
-       {:moesif_api, "~> 0.2.0"}
+       {:moesif_api, "~> 0.4.0"}
      ]
    end
    ```
