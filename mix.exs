@@ -17,7 +17,7 @@ defmodule MoesifApi.MixProject do
       {:plug, "~> 1.0"},
       {:jason, "~> 1.2"},
       {:elixir_uuid, "~> 1.2"},
-      {:httpoison, "~> 1.0"},
+      {:httpoison, "~> 1.0 or ~> 2.0 or ~> 3.0"},
       {:tesla, "~> 1.4", optional: true},
       {:ex_doc, "~> 0.31", only: :dev, runtime: false},
     ]
